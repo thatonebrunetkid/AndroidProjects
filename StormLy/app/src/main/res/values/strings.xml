@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">stormly</string>
+    <string name="title_activity_permissions">PermissionsActivity</string>
+    <string name="apiKey">67c6dc4a26e5f5af6ce5ede347e86113</string>
+</resources>

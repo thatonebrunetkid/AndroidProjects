@@ -2,8 +2,10 @@ package com.cryptica.stormly
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.content.res.Resources
 import android.location.Criteria
 import android.location.Location
 import android.location.LocationManager
@@ -120,6 +122,7 @@ class PermissionsActivity : ComponentActivity() {
                             val weatherApi = RetrofitHelper.getInstance().create(CurrentWeatherApi::class.java)
                             GlobalScope.launch {
                                 val weatherResult = weatherApi.getWeather(location!!.latitude, location.longitude, resources.getString(R.string.apiKey), "metric")
+                                val forecastResult = weatherApi.getForecast(location!!.latitude, location.longitude, resources.getString(R.string.apiKey), "metric")
                                 val sharedPrefs = getSharedPreferences("prefs", MODE_PRIVATE)
                                 val editor = sharedPrefs.edit()
                                 editor.putString("City", weatherResult.body()!!.name)
@@ -138,7 +141,7 @@ class PermissionsActivity : ComponentActivity() {
                                 if(weatherResult.body()!!.rain != null)
                                     editor.putString("rain1h", weatherResult.body()!!.rain.h.toString())
                                 editor.apply()
-                                Log.e("RESP", weatherResult.body().toString())
+                                Log.e("RESP", forecastResult.body().toString())
                                 val intent = Intent(applicationContext, MainActivity::class.java)
                                 startActivity(intent)
                             }
@@ -154,7 +157,7 @@ class PermissionsActivity : ComponentActivity() {
 fun Loader()
 {
     val composition by rememberLottieComposition(
-        spec = LottieCompositionSpec.Url("https://lottie.host/6e433cdc-bcbe-4e87-8733-c82e20c8efe7/fzzuiiZmRF.json")
+        spec = LottieCompositionSpec.RawRes(R.raw.loading)
     )
     LottieAnimation(
         composition = composition, modifier = Modifier.size(300.dp, 300.dp), iterations = LottieConstants.IterateForever

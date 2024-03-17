@@ -77,7 +77,9 @@ class MainActivity : ComponentActivity() {
                         TimeAndLocationSection(prefs = sharedPrefs)
                         Column(modifier = Modifier
                             .fillMaxWidth()
-                            .verticalScroll(rememberScrollState())){
+                            .verticalScroll(rememberScrollState()),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                            ){
                             CurrentConditionsSection(prefs = sharedPrefs)
                             Spacer(modifier = Modifier.padding(top = 25.dp))
                             presentDetails(prefs = sharedPrefs)
@@ -102,10 +104,10 @@ class MainActivity : ComponentActivity() {
         if(currentHour in 8..17)
         {
             returnColor = Color(android.graphics.Color.parseColor("#3498DB"))
-        } else if ((currentHour in 18..21) || (currentHour in 6..7))
+        } else if ((currentHour in 18..20) || (currentHour in 6..7))
         {
             returnColor = Color(android.graphics.Color.parseColor("#EC7063"))
-        } else if(currentHour >= 22)
+        } else if(currentHour >= 21)
         {
             returnColor = Color(android.graphics.Color.parseColor("#34495E"))
         }
@@ -148,8 +150,8 @@ class MainActivity : ComponentActivity() {
     private fun CurrentConditionsSection(prefs : SharedPreferences)
     {
         Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
-            Row(modifier = Modifier.fillMaxWidth()) {
-                val composition by rememberLottieComposition(spec = LottieCompositionSpec.Url(getLottieUrl(prefs = prefs)))
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
+                val composition by rememberLottieComposition(spec = LottieCompositionSpec.RawRes(getLottieUrl(prefs = prefs)))
                 LottieAnimation(
                     composition = composition, modifier = Modifier.size(200.dp, 200.dp), iterations = LottieConstants.IterateForever
                 )
@@ -248,42 +250,51 @@ class MainActivity : ComponentActivity() {
     }
 
     @Composable
-    private fun getLottieUrl(prefs : SharedPreferences): String {
+    private fun getLottieUrl(prefs : SharedPreferences): Int {
         val conditionsMain = prefs.getString("iconCondition", "")
         val conditionDescription = prefs.getString("descriptionCondition", "")
         val currentHour = GetCurrentTime().split(":")[0].toInt()
-        var url = ""
+        var url = 0
 
         if(conditionsMain == "Clouds")
         {
             if(conditionDescription!!.contains("few clouds") || conditionDescription!!.contains("scattered clouds"))
             {
-                if(currentHour in 7..21)
+                if(currentHour in 7..20)
                 {
-                    url = "https://lottie.host/c99298ed-ddfe-4a55-8de0-00d605c0f846/moS4iovBas.json"
+                    url = R.raw.cloudsnight
                 } else
                 {
-                    url = "https://lottie.host/0735e185-55e2-4d61-9708-edf0b481b55b/vY4K0QK1nu.json"
+                    url = R.raw.cloudsday
                 }
             } else
             {
-                url = "https://lottie.host/ff0e0053-9b02-4b57-86b5-5669bdbc7d62/u0ThHzikBl.json"
+                url = R.raw.clouds
             }
         }else if(conditionsMain == "Thunderstorm")
-            url = "https://lottie.host/bb706008-1910-4c71-8c5d-ef2b09e099cd/c61oeedT4a.json"
-        else if(conditionsMain == "Drizzle" || conditionsMain == "Atmosphere")
-            url = "https://lottie.host/101e4ef7-d64c-4a59-92a7-9a83c6165ed4/DP8BdqvqEA.json"
+            url = R.raw.storm
+        else if(conditionsMain == "Drizzle" || conditionsMain == "Atmosphere" || conditionsMain!!.contains("fog"))
+            url = R.raw.fog
         else if(conditionsMain == "Rain")
         {
-            if(currentHour in 7..21)
+            if(currentHour in 7..20)
             {
-                url = "https://lottie.host/afba70f8-04b1-4cad-8163-9be77c5ae242/hh55umxHrO.json"
+                url = R.raw.rainnight
             } else
             {
-                url = "https://lottie.host/2cd75658-99db-45e0-94f4-56eef5ff5033/2SU6glNfWm.json"
+                url = R.raw.rainday
             }
         }else if(conditionsMain == "Snow")
-            url = "https://lottie.host/c4b930e2-1827-4a72-ae25-c649e662eba6/TJsV4wtv55.json"
+            url = R.raw.snow
+        else{
+            if(currentHour in 7 .. 20 )
+            {
+                url = R.raw.clearday
+            }else
+            {
+                url = R.raw.clearnight
+            }
+        }
 
         return url
     }
@@ -394,7 +405,7 @@ class MainActivity : ComponentActivity() {
             modifier = Modifier.fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            val composition by rememberLottieComposition(spec = LottieCompositionSpec.Url("https://lottie.host/c0a8feaf-c045-4ac9-8d77-2fb5059d78f4/RpBbGRajQ3.json"))
+            val composition by rememberLottieComposition(spec = LottieCompositionSpec.RawRes(R.raw.sunrise))
             LottieAnimation(
                 composition = composition, modifier = Modifier.size(400.dp, 400.dp), iterations = LottieConstants.IterateForever
             )

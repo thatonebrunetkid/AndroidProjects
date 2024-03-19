@@ -1,23 +1,30 @@
 package com.cryptica.stormly
 
 import android.annotation.SuppressLint
+import android.content.Context
 import android.content.SharedPreferences
 import android.icu.util.Calendar
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
@@ -43,6 +50,8 @@ import com.airbnb.lottie.compose.LottieAnimation
 import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.airbnb.lottie.compose.LottieConstants
 import com.airbnb.lottie.compose.rememberLottieComposition
+import com.cryptica.stormly.remote.CurrentWeatherApi
+import com.cryptica.stormly.remote.RetrofitHelper
 import com.cryptica.stormly.ui.theme.StormlyTheme
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import org.intellij.lang.annotations.JdkConstants.HorizontalAlignment
@@ -62,11 +71,11 @@ class MainActivity : ComponentActivity() {
                 val systemUiController = rememberSystemUiController()
                 val sharedPrefs = getSharedPreferences("prefs", MODE_PRIVATE)
                 SideEffect {
-                    systemUiController.setSystemBarsColor(SetBackgroundColor(sharedPrefs))
+                    systemUiController.setSystemBarsColor(SetBackgroundColor())
                 }
                 Surface(
                     modifier = Modifier.fillMaxSize(),
-                    color = SetBackgroundColor(sharedPrefs)
+                    color = SetBackgroundColor()
                 ) {
                     Column(
                         modifier = Modifier
@@ -82,6 +91,8 @@ class MainActivity : ComponentActivity() {
                             ){
                             CurrentConditionsSection(prefs = sharedPrefs)
                             Spacer(modifier = Modifier.padding(top = 25.dp))
+                            TenHoursForecast(context = applicationContext, sharedPrefs = sharedPrefs)
+                            Spacer(modifier = Modifier.padding(top = 25.dp))
                             presentDetails(prefs = sharedPrefs)
                             sunStatus(prefs = sharedPrefs)
                         }
@@ -95,7 +106,7 @@ class MainActivity : ComponentActivity() {
 
 
     @SuppressLint("SimpleDateFormat")
-    private fun SetBackgroundColor(prefs: SharedPreferences) : Color
+    private fun SetBackgroundColor() : Color
     {
         var returnColor : Color = Color.DarkGray
         val simpleDateFormat = SimpleDateFormat("HH:mm a")
@@ -250,9 +261,13 @@ class MainActivity : ComponentActivity() {
     }
 
     @Composable
-    private fun getLottieUrl(prefs : SharedPreferences): Int {
-        val conditionsMain = prefs.getString("iconCondition", "")
-        val conditionDescription = prefs.getString("descriptionCondition", "")
+    private fun getLottieUrl(prefs : SharedPreferences, conditions: String = ""): Int {
+        var conditionsMain = ""
+        if(conditions == "")
+            conditionsMain = prefs.getString("iconCondition", "")!!
+        else
+            conditionsMain = conditions
+        val conditionDescription = prefs.getString("descriptionCondition", "")!!
         val currentHour = GetCurrentTime().split(":")[0].toInt()
         var url = 0
 
@@ -275,7 +290,7 @@ class MainActivity : ComponentActivity() {
             url = R.raw.storm
         else if(conditionsMain == "Drizzle" || conditionsMain == "Atmosphere" || conditionsMain!!.contains("fog"))
             url = R.raw.fog
-        else if(conditionsMain == "Rain")
+        else if(conditionsMain == "Rain" || conditionsMain!!.contains("rain"))
         {
             if(currentHour in 7..20)
             {
@@ -458,6 +473,101 @@ class MainActivity : ComponentActivity() {
 
         }
     }
+
+@Composable
+fun TenHoursForecast(context: Context, sharedPrefs: SharedPreferences)
+{
+    Text(
+        text = "Next 24 hours",
+        fontFamily = FontFamily.SansSerif,
+        fontWeight = FontWeight.Light,
+        fontSize = 30.sp,
+        color = Color.White
+    )
+    Spacer(modifier = Modifier.padding(top = 10.dp))
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(200.dp)
+            .horizontalScroll(rememberScrollState())
+            .padding(top = 10.dp, bottom = 10.dp),
+        horizontalArrangement = Arrangement.Center
+    ) {
+        WeatherBox("forecast1temp", "forecast1desc", sharedPrefs, 3)
+        WeatherBox("forecast2temp", "forecast2desc", sharedPrefs, 6)
+        WeatherBox("forecast3temp", "forecast3desc", sharedPrefs, 9)
+        WeatherBox("forecast4temp", "forecast4desc", sharedPrefs, 12)
+        WeatherBox("forecast5temp", "forecast5desc", sharedPrefs, 15)
+        WeatherBox("forecast6temp", "forecast6desc", sharedPrefs, 18)
+        WeatherBox("forecast7temp", "forecast7desc", sharedPrefs, 21)
+        WeatherBox("forecast8temp", "forecast8desc", sharedPrefs, 24)
+    }
+}
+
+@Composable
+fun WeatherBox(temp: String, forecast: String, sharedPrefs: SharedPreferences, hours: Int)
+{
+
+    Spacer(modifier = Modifier.padding(start = 10.dp))
+        Box(
+            modifier = Modifier
+                .fillMaxHeight()
+                .background(
+                    color = SetBackgroundColor(),
+                    shape = RoundedCornerShape(15.dp)
+                )
+        ) {
+            Column(
+                modifier = Modifier.fillMaxSize(),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                val currentHour = Calendar.getInstance().time
+                val simpleDateFormat = SimpleDateFormat("HH:mm a")
+                currentHour.hours += hours
+
+                Text(
+                    text = simpleDateFormat.format(currentHour).split(" ")[0],
+                    fontFamily = FontFamily.SansSerif,
+                    fontWeight = FontWeight.Light,
+                    fontSize = 15.sp,
+                    color = Color.White,
+                    modifier = Modifier.align(Alignment.CenterHorizontally)
+                )
+                Spacer(modifier = Modifier.padding(top = 10.dp))
+                val composition by rememberLottieComposition(
+                    spec = LottieCompositionSpec.RawRes(
+                        getLottieUrl(prefs = sharedPrefs, sharedPrefs.getString(forecast, "")!!)
+                    )
+                )
+                LottieAnimation(
+                    composition = composition,
+                    modifier = Modifier.size(50.dp, 50.dp),
+                    iterations = LottieConstants.IterateForever
+                )
+                Spacer(modifier = Modifier.padding(top = 10.dp))
+                Text(
+                    text = (converToCelsius(sharedPrefs.getString(temp, "")!!) + "°"),
+                    fontFamily = FontFamily.SansSerif,
+                    fontWeight = FontWeight.Light,
+                    fontSize = 15.sp,
+                    color = Color.White,
+                    modifier = Modifier.align(Alignment.CenterHorizontally)
+                )
+                Spacer(modifier = Modifier.padding(top = 10.dp))
+                Text(
+                    text = sharedPrefs.getString(forecast, "")!!,
+                    fontFamily = FontFamily.SansSerif,
+                    fontWeight = FontWeight.Light,
+                    fontSize = 15.sp,
+                    color = Color.White,
+                    modifier = Modifier.align(Alignment.CenterHorizontally)
+                )
+            }
+        }
+    Spacer(modifier = Modifier.padding(start = 10.dp))
+}
+
+
 
     private fun epochToTimeZone(epoch : Long) : String
     {

@@ -4,9 +4,11 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
+import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.content.res.Resources
 import android.location.Criteria
+import android.location.Geocoder
 import android.location.Location
 import android.location.LocationManager
 import android.os.Build
@@ -45,6 +47,7 @@ import com.airbnb.lottie.compose.LottieAnimation
 import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.airbnb.lottie.compose.LottieConstants
 import com.airbnb.lottie.compose.rememberLottieComposition
+import com.cryptica.stormly.data.models.ForecastModel
 import com.cryptica.stormly.remote.CurrentWeatherApi
 import com.cryptica.stormly.remote.RetrofitHelper
 import com.cryptica.stormly.ui.theme.StormlyTheme
@@ -53,6 +56,8 @@ import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import retrofit2.Response
+import java.util.Locale
 import java.util.function.Consumer
 
 class PermissionsActivity : ComponentActivity() {
@@ -125,7 +130,7 @@ class PermissionsActivity : ComponentActivity() {
                                 val forecastResult = weatherApi.getForecast(location!!.latitude, location.longitude, resources.getString(R.string.apiKey), "metric")
                                 val sharedPrefs = getSharedPreferences("prefs", MODE_PRIVATE)
                                 val editor = sharedPrefs.edit()
-                                editor.putString("City", weatherResult.body()!!.name)
+                                editor.putString("City", getCityName(applicationContext, location.latitude, location.longitude))
                                 editor.putString("iconCondition", weatherResult.body()!!.weather[0].main)
                                 editor.putString("descriptionCondition", weatherResult.body()!!.weather[0].description)
                                 editor.putString("temperature", weatherResult.body()!!.main.temp.toString())
@@ -140,6 +145,7 @@ class PermissionsActivity : ComponentActivity() {
                                 editor.putString("sunset", weatherResult.body()!!.sys.sunset.toString())
                                 if(weatherResult.body()!!.rain != null)
                                     editor.putString("rain1h", weatherResult.body()!!.rain.h.toString())
+                                getWeatherForNextTenHours(sharedPrefs, editor, forecastResult)
                                 editor.apply()
                                 Log.e("RESP", forecastResult.body().toString())
                                 val intent = Intent(applicationContext, MainActivity::class.java)
@@ -153,6 +159,27 @@ class PermissionsActivity : ComponentActivity() {
     }
 }
 
+fun getWeatherForNextTenHours(sharedPrefs: SharedPreferences, editor: SharedPreferences.Editor, response: Response<ForecastModel>)
+{
+    val body = response.body()
+    editor.putString("forecast1temp", body!!.list.get(0).main.temp.toString())
+    editor.putString("forecast2temp", body.list.get(1).main.temp.toString())
+    editor.putString("forecast3temp", body.list.get(2).main.temp.toString())
+    editor.putString("forecast4temp", body.list.get(3).main.temp.toString())
+    editor.putString("forecast5temp", body.list.get(4).main.temp.toString())
+    editor.putString("forecast6temp", body.list.get(5).main.temp.toString())
+    editor.putString("forecast7temp", body.list.get(6).main.temp.toString())
+    editor.putString("forecast8temp", body.list.get(7).main.temp.toString())
+    editor.putString("forecast1desc", body.list.get(0).weather.get(0).description)
+    editor.putString("forecast2desc", body.list.get(1).weather.get(0).description)
+    editor.putString("forecast3desc", body.list.get(2).weather.get(0).description)
+    editor.putString("forecast4desc", body.list.get(3).weather.get(0).description)
+    editor.putString("forecast5desc", body.list.get(4).weather.get(0).description)
+    editor.putString("forecast6desc", body.list.get(5).weather.get(0).description)
+    editor.putString("forecast7desc", body.list.get(6).weather.get(0).description)
+    editor.putString("forecast8desc", body.list.get(7).weather.get(0).description)
+}
+
 @Composable
 fun Loader()
 {
@@ -162,6 +189,13 @@ fun Loader()
     LottieAnimation(
         composition = composition, modifier = Modifier.size(300.dp, 300.dp), iterations = LottieConstants.IterateForever
     )
+}
+
+fun getCityName(context: Context, lat: Double, lng: Double) : String
+{
+    val geocoder = Geocoder(context, Locale.getDefault())
+    val adresses = geocoder.getFromLocation(lat, lng, 1)
+    return adresses!!.get(0).locality
 }
 
 

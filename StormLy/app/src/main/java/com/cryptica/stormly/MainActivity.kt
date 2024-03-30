@@ -1,11 +1,15 @@
 package com.cryptica.stormly
 
 import android.annotation.SuppressLint
+import android.app.Activity
 import android.content.Context
 import android.content.SharedPreferences
 import android.icu.util.Calendar
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
+import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -34,6 +38,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
@@ -46,6 +54,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.view.WindowCompat
+import androidx.glance.LocalContext
 import com.airbnb.lottie.compose.LottieAnimation
 import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.airbnb.lottie.compose.LottieConstants
@@ -54,6 +63,8 @@ import com.cryptica.stormly.remote.CurrentWeatherApi
 import com.cryptica.stormly.remote.RetrofitHelper
 import com.cryptica.stormly.ui.theme.StormlyTheme
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
+import kotlinx.coroutines.android.awaitFrame
+import kotlinx.coroutines.launch
 import org.intellij.lang.annotations.JdkConstants.HorizontalAlignment
 import java.sql.Date
 import java.sql.Timestamp
@@ -64,6 +75,7 @@ import java.time.ZoneId
 import kotlin.math.roundToInt
 
 class MainActivity : ComponentActivity() {
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
@@ -73,6 +85,11 @@ class MainActivity : ComponentActivity() {
                 SideEffect {
                     systemUiController.setSystemBarsColor(SetBackgroundColor())
                 }
+
+               BackHandler {
+                   this@MainActivity.finishAffinity()
+               }
+
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = SetBackgroundColor()
@@ -277,10 +294,10 @@ class MainActivity : ComponentActivity() {
             {
                 if(currentHour in 7..20)
                 {
-                    url = R.raw.cloudsnight
+                    url = R.raw.cloudsday
                 } else
                 {
-                    url = R.raw.cloudsday
+                    url = R.raw.cloudsnight
                 }
             } else
             {
@@ -294,10 +311,10 @@ class MainActivity : ComponentActivity() {
         {
             if(currentHour in 7..20)
             {
-                url = R.raw.rainnight
+                url = R.raw.rainday
             } else
             {
-                url = R.raw.rainday
+                url = R.raw.rainnight
             }
         }else if(conditionsMain == "Snow")
             url = R.raw.snow
@@ -526,7 +543,7 @@ fun WeatherBox(temp: String, forecast: String, sharedPrefs: SharedPreferences, h
                 currentHour.hours += hours
 
                 Text(
-                    text = simpleDateFormat.format(currentHour).split(" ")[0],
+                    text = simpleDateFormat.format(currentHour).split(" ")[0].split(":")[0] + ":00",
                     fontFamily = FontFamily.SansSerif,
                     fontWeight = FontWeight.Light,
                     fontSize = 15.sp,

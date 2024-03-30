@@ -147,7 +147,6 @@ class PermissionsActivity : ComponentActivity() {
                                     editor.putString("rain1h", weatherResult.body()!!.rain.h.toString())
                                 getWeatherForNextTenHours(sharedPrefs, editor, forecastResult)
                                 editor.apply()
-                                Log.e("RESP", forecastResult.body().toString())
                                 val intent = Intent(applicationContext, MainActivity::class.java)
                                 startActivity(intent)
                             }

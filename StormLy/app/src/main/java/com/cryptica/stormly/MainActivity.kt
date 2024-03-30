@@ -68,8 +68,8 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             StormlyTheme {
-                val systemUiController = rememberSystemUiController()
                 val sharedPrefs = getSharedPreferences("prefs", MODE_PRIVATE)
+                val systemUiController = rememberSystemUiController()
                 SideEffect {
                     systemUiController.setSystemBarsColor(SetBackgroundColor())
                 }
@@ -125,7 +125,7 @@ class MainActivity : ComponentActivity() {
         return returnColor
     }
 
-    private fun GetCurrentTime() : String
+    fun GetCurrentTime() : String
     {
         val simpleDateFormat = SimpleDateFormat("HH:mm a")
         return simpleDateFormat.format(Calendar.getInstance().time)
@@ -271,7 +271,7 @@ class MainActivity : ComponentActivity() {
         val currentHour = GetCurrentTime().split(":")[0].toInt()
         var url = 0
 
-        if(conditionsMain == "Clouds")
+        if(conditionsMain == "Clouds" || conditionsMain.contains("clouds"))
         {
             if(conditionDescription!!.contains("few clouds") || conditionDescription!!.contains("scattered clouds"))
             {

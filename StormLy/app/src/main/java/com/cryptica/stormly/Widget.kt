@@ -55,7 +55,7 @@ object Widget : GlanceAppWidget() {
         ), horizontalAlignment = Alignment.CenterHorizontally){
             items(1) {index: Int ->
                 Column(modifier = GlanceModifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally) {
-                    Spacer(modifier = GlanceModifier.fillMaxWidth().height(30.dp))
+                    Spacer(modifier = GlanceModifier.fillMaxWidth().height(15.dp))
                     androidx.glance.text.Text(text = sharedPreferences.getString("City", "")!!,
                         style = TextStyle(fontSize = 15.sp, fontStyle = FontStyle.Normal, color = ColorProvider(Color.White)
                             , textAlign = TextAlign.Center))

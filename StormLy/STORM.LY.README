@@ -1,0 +1,11 @@
+Storm.ly
+
+Simple weather application using:
+  - Jetpack Compose
+  - Kotlin
+  - Retrofit2
+  - Glance Widget
+  - Lottie
+  - Shared Preferences
+  - GJson
+  - Coroutines

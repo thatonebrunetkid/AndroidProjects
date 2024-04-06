@@ -43,6 +43,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.app.ActivityCompat
+import androidx.glance.appwidget.GlanceAppWidgetManager
 import com.airbnb.lottie.compose.LottieAnimation
 import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.airbnb.lottie.compose.LottieConstants
@@ -147,6 +148,9 @@ class PermissionsActivity : ComponentActivity() {
                                     editor.putString("rain1h", weatherResult.body()!!.rain.h.toString())
                                 getWeatherForNextTenHours(sharedPrefs, editor, forecastResult)
                                 editor.apply()
+                                val glanceId = GlanceAppWidgetManager(applicationContext).getGlanceIds(Widget::class.java).firstOrNull()
+                                if(glanceId != null)
+                                    Widget.update(applicationContext, glanceId)
                                 val intent = Intent(applicationContext, MainActivity::class.java)
                                 startActivity(intent)
                             }
